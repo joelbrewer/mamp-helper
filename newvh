@@ -1,0 +1,79 @@
+#!/bin/sh
+HOSTS=/etc/hosts
+DOCUMENT_ROOT=/Users/joelbrewer/Sites
+VHOSTS=/Applications/MAMP/conf/apache/extra/httpd-vhosts.conf
+
+echo Welcome to the Matrix. 
+
+isVerified ()
+{
+    echo "You entered $1"
+    read -p "Is this correct? (y/n)" -n 1 -r
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        echo "
+awesome!"
+        return 1
+    else
+        return 0
+    fi
+}
+isRoot ()
+{
+    if [[ $EUID -ne 0  ]]; then
+        return 1
+    else
+        return 0
+    fi
+}
+
+# Check if user has root privelages
+
+if isRoot; then
+    echo "User has root privelages..."
+else
+    echo "Script must be run as root (sudo newvh)"
+    exit 1
+fi
+
+# Obtain Document Root from user
+echo Document Root is $DOCUMENT_ROOT
+echo Please append the document root for the new virtual host.
+read DOCUMENT_ROOT_APPEND
+echo "Document Root is now $DOCUMENT_ROOT$DOCUMENT_ROOT_APPEND"
+while isVerified $DOCUMENT_ROOT_APPEND = 0
+do
+echo "
+Please reenter the document root"
+read DOCUMENT_ROOT_APPEND
+done
+DOCUMENT_ROOT="$DOCUMENT_ROOT$DOCUMENT_ROOT_APPEND"
+
+# Obtain Server Name from user
+echo "
+Please enter the server name (ie. virtualhost.dev):"
+read SERVER_NAME
+while isVerified $SERVER_NAME = 0
+do
+echo "
+Please reenter the server name (ie. virtualhost.dev):"
+read SERVER_NAME
+done
+echo "
+You have entered $DOCUMENT_ROOT as the Document Root and
+$SERVER_NAME as the Server Name"
+
+# Add host to $HOSTS
+echo "127.0.0.1       $SERVER_NAME" >> $HOSTS
+
+# Add virtual host to $VHOSTS
+echo "<VirtualHost *:80>
+    DocumentRoot \"$DOCUMENT_ROOT\"
+    ServerName $SERVER_NAME
+    ServerAlias www.$SERVER_NAME
+</VirtualHost>" >> $VHOSTS
+
+# Success!
+echo "
+Success!
+To complete installation, restart MAMP."
