@@ -1,0 +1,6 @@
+- Add options for advanced configuration.
+- Add functionality to manage existing VHosts
+- Add shortcuts
+
+And further down the line...
+- GTK implementation by python
